@@ -1,7 +1,6 @@
 import React, { ReactNode, useState } from "react";
 import {
   Box,
-  Typography,
   createStyles,
   makeStyles,
   Theme,
@@ -9,6 +8,8 @@ import {
 } from "@material-ui/core";
 import MuiTab from "@material-ui/core/Tab";
 import { TabContext, TabList } from "@material-ui/lab";
+import { useCurrentTabId } from "./atom";
+import TabResult from "./components/tab-result";
 
 const StyledTabList = withStyles((theme: Theme) =>
   createStyles({
@@ -77,34 +78,31 @@ const useStyles = makeStyles(() =>
   })
 );
 
-interface TabsProps {
-  tabTitle: string[];
-  onChange?: (tabIndex: string) => void;
-}
-
 const tabs: string[] = ["开发", "设计", "产品"];
 
-const Tabs: React.FunctionComponent<TabsProps> = (props) => {
+const Tabs: React.FunctionComponent = () => {
   const classes = useStyles();
 
-  const [currentTabValue, setCurrentTabValue] = useState<string>(tabs[0]);
-  const { tabTitle, onChange } = props;
+  const [currentTabId, setCurrentTabId] = useCurrentTabId();
 
   const handleTabChange = (
     event: React.ChangeEvent<{}>,
     newValue: string
   ): void | Promise<void> => {
-    setCurrentTabValue(newValue);
-    onChange && onChange(newValue);
+    setCurrentTabId(newValue);
   };
 
   function tabLabel(title: string): ReactNode {
     return <span className={classes.root}>{title}</span>;
   }
 
+  function content(type: string): ReactNode {
+    return <TabResult type={type} />;
+  }
+
   return (
     <Box className={classes.container}>
-      <TabContext value={currentTabValue}>
+      <TabContext value={currentTabId}>
         <Box className={classes.tabList}>
           <StyledTabList
             onChange={handleTabChange}
@@ -112,13 +110,15 @@ const Tabs: React.FunctionComponent<TabsProps> = (props) => {
             variant="scrollable"
           >
             {tabs.map((tab, i) => (
-              <StyledTab key={tab + i} value={tab} label={tabLabel(tab)} />
+              <StyledTab
+                key={tab + i}
+                value={i.toString()}
+                label={tabLabel(tab)}
+              />
             ))}
           </StyledTabList>
         </Box>
-        <Box>
-          <Typography>{currentTabValue}</Typography>
-        </Box>
+        {content(currentTabId)}
       </TabContext>
     </Box>
   );
