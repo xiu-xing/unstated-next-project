@@ -81,7 +81,7 @@ const useStyles = makeStyles(() =>
       width: "100%",
       height: "100%",
     },
-  }),
+  })
 );
 
 // eslint-disable-next-line @typescript-eslint/no-empty-interface
@@ -110,9 +110,10 @@ interface CandlesTickProps {
   handleOption?: (option: EChartsOption) => void;
 }
 
-const CandlesTick: React.FunctionComponent<CandlesTickProps> = props => {
+const CandlesTick: React.FunctionComponent<CandlesTickProps> = (props) => {
   const classes = useStyles(props);
-  const { id, theme, chartData, lock, chartConfig, handleOption, min, max } = props;
+  const { id, theme, chartData, lock, chartConfig, handleOption, min, max } =
+    props;
   const [chartProps, setChartProps] = useState<ChartProps>();
   const [yAxisNames, setYAxisNames] = useState<string[]>([]);
 
@@ -120,7 +121,7 @@ const CandlesTick: React.FunctionComponent<CandlesTickProps> = props => {
     const markLineData = chartData.markLineData;
     const markLine: MarkLineOption = {
       symbol: "none",
-      data: chartConfig.markLines.map(v => {
+      data: chartConfig.markLines.map((v) => {
         return {
           yAxis: markLineData[v.id],
           lineStyle: {
@@ -140,7 +141,11 @@ const CandlesTick: React.FunctionComponent<CandlesTickProps> = props => {
     return markLine;
   }
 
-  function initSeries(chartConfig: ChartModel, hasData: boolean, chartData: ChartDataModel) {
+  function initSeries(
+    chartConfig: ChartModel,
+    hasData: boolean,
+    chartData: ChartDataModel
+  ) {
     // const newSeries: SeriesOption[] = [];
     // const markLine = initMarkLine(chartConfig, chartData);
     // newSeries.push(
@@ -160,7 +165,11 @@ const CandlesTick: React.FunctionComponent<CandlesTickProps> = props => {
     // return newSeries;
     const newSeries: SeriesOption[] = [];
     const markLine = initMarkLine(chartConfig, chartData);
-    newSeries.push(...chartConfig.series.map(series => getSeriesByOptionType(series, hasData, markLine)));
+    newSeries.push(
+      ...chartConfig.series.map((series) =>
+        getSeriesByOptionType(series, hasData, markLine)
+      )
+    );
     return newSeries;
   }
 
@@ -168,22 +177,35 @@ const CandlesTick: React.FunctionComponent<CandlesTickProps> = props => {
     const newXAxes: XAXisOption[] = [];
     if (chartConfig.series.length > 0) {
       const type = getOptionType(chartConfig.series[0]);
-      const axis = chartConfig.xAxises.length > 0 ? chartConfig.xAxises[0] : new AxisesModel();
+      const axis =
+        chartConfig.xAxises.length > 0
+          ? chartConfig.xAxises[0]
+          : new AxisesModel();
       newXAxes.push(getXAxis(type, axis, chartData.unit, hasData));
     }
     return newXAxes;
   }
 
-  function initYAxes(chartConfig: ChartModel, hasData: boolean, chartData: ChartDataModel) {
-    setYAxisNames(chartConfig.yAxises.map(axis => axis.name));
+  function initYAxes(
+    chartConfig: ChartModel,
+    hasData: boolean,
+    chartData: ChartDataModel
+  ) {
+    setYAxisNames(chartConfig.yAxises.map((axis) => axis.name));
     const newYAxes: YAXisOption[] = [];
 
     if (chartConfig.series.length > 0) {
       const type = getOptionType(chartConfig.series[0]);
       if (chartConfig.yAxises.length == 0) {
-        newYAxes.push(getYAxis(type, new AxisesModel(), chartData.unit, hasData, chartData));
+        newYAxes.push(
+          getYAxis(type, new AxisesModel(), chartData.unit, hasData, chartData)
+        );
       }
-      newYAxes.push(...chartConfig.yAxises.map(axis => getYAxis(type, axis, chartData.unit, hasData, chartData)));
+      newYAxes.push(
+        ...chartConfig.yAxises.map((axis) =>
+          getYAxis(type, axis, chartData.unit, hasData, chartData)
+        )
+      );
 
       if (newYAxes.length > 1) {
         newYAxes.forEach((_, i) => {
@@ -209,7 +231,11 @@ const CandlesTick: React.FunctionComponent<CandlesTickProps> = props => {
   function initGrid(chartConfig: ChartModel) {
     if (chartConfig.series.length > 0) {
       const type = getOptionType(chartConfig.series[0]);
-      if (type == OptionType.line || type == OptionType.bar || type == OptionType.candlestick) {
+      if (
+        type == OptionType.line ||
+        type == OptionType.bar ||
+        type == OptionType.candlestick
+      ) {
         if (chartConfig.markLines.length > 0) {
           return { ...markLineGrid };
         }
@@ -219,18 +245,27 @@ const CandlesTick: React.FunctionComponent<CandlesTickProps> = props => {
   }
 
   function initRadar(chartConfig: ChartModel, hasData: boolean) {
-    if (chartConfig.series.length > 0 && chartConfig.series[0].type == "radar") {
+    if (
+      chartConfig.series.length > 0 &&
+      chartConfig.series[0].type == "radar"
+    ) {
       const getDatasetMax = (): number => {
         let max = 0;
-        chartData.dataset.forEach(set => set.forEach(data => typeof data == "number" && data > max && (max = data)));
+        chartData.dataset.forEach((set) =>
+          set.forEach(
+            (data) => typeof data == "number" && data > max && (max = data)
+          )
+        );
         return max;
       };
 
       const maxNumber = getDatasetMax();
 
-      const indicator = chartConfig.series[0].indicators.map((indicator: string) => {
-        return { name: indicator, color: "#666666", max: maxNumber };
-      });
+      const indicator = chartConfig.series[0].indicators.map(
+        (indicator: string) => {
+          return { name: indicator, color: "#666666", max: maxNumber };
+        }
+      );
       return hasData
         ? commonWithoutDataRadar
         : {
@@ -250,7 +285,7 @@ const CandlesTick: React.FunctionComponent<CandlesTickProps> = props => {
           formatter: radarTooltipFormatter(
             chartConfig.tooltipFormatter,
             chartConfig.series[0].indicators,
-            chartData.unit,
+            chartData.unit
           ),
         };
       }
@@ -261,7 +296,10 @@ const CandlesTick: React.FunctionComponent<CandlesTickProps> = props => {
             type: "shadow",
           },
           trigger: "axis",
-          formatter: tooltipFormatter(chartConfig.tooltipFormatter, chartData.unit),
+          formatter: tooltipFormatter(
+            chartConfig.tooltipFormatter,
+            chartData.unit
+          ),
         };
       }
       if (type == OptionType.line) {
@@ -271,7 +309,10 @@ const CandlesTick: React.FunctionComponent<CandlesTickProps> = props => {
             type: "line",
           },
           trigger: "axis",
-          formatter: tooltipFormatter(chartConfig.tooltipFormatter, chartData.unit),
+          formatter: tooltipFormatter(
+            chartConfig.tooltipFormatter,
+            chartData.unit
+          ),
         };
       }
       if (type == OptionType.candlestick) {
@@ -285,13 +326,16 @@ const CandlesTick: React.FunctionComponent<CandlesTickProps> = props => {
       }
       return {
         ...commonTooltip,
-        formatter: tooltipFormatter(chartConfig.tooltipFormatter, chartData.unit),
+        formatter: tooltipFormatter(
+          chartConfig.tooltipFormatter,
+          chartData.unit
+        ),
       };
     }
     if (chartConfig.series.length > 1) {
       let axisPointerType: "line" | "shadow" | "cross" = "line";
       let seriesType = "";
-      chartConfig.series.forEach(series => {
+      chartConfig.series.forEach((series) => {
         if (series.type == "bar") {
           axisPointerType = "shadow";
         }
@@ -310,7 +354,10 @@ const CandlesTick: React.FunctionComponent<CandlesTickProps> = props => {
       }
       return {
         ...commonTooltip,
-        formatter: tooltipFormatter(chartConfig.tooltipFormatter, chartData.unit),
+        formatter: tooltipFormatter(
+          chartConfig.tooltipFormatter,
+          chartData.unit
+        ),
         axisPointer: {
           type: axisPointerType,
         },
@@ -331,8 +378,14 @@ const CandlesTick: React.FunctionComponent<CandlesTickProps> = props => {
     if (chartConfig.dataZoom && chartData.dataset.length > 10) {
       let dataZoom = _.cloneDeep(commonDataZoom);
 
-      if (chartConfig.dataZoomShowCount && chartData.dataset.length > chartConfig.dataZoomShowCount + 1) {
-        return _.merge(dataZoom, { startValue: chartData.dataset.length - (chartConfig.dataZoomShowCount + 1) });
+      if (
+        chartConfig.dataZoomShowCount &&
+        chartData.dataset.length > chartConfig.dataZoomShowCount + 1
+      ) {
+        return _.merge(dataZoom, {
+          startValue:
+            chartData.dataset.length - (chartConfig.dataZoomShowCount + 1),
+        });
       }
 
       if (chartConfig.series[0].type == "candlestick") {
@@ -346,7 +399,10 @@ const CandlesTick: React.FunctionComponent<CandlesTickProps> = props => {
     }
   }
 
-  function initLegend(chartConfig: ChartModel, hasData: boolean): LegendOption | undefined {
+  function initLegend(
+    chartConfig: ChartModel,
+    hasData: boolean
+  ): LegendOption | undefined {
     if (hasData) return;
     if (chartConfig.series.length == 1) {
       const type = getOptionType(chartConfig.series[0]);
@@ -374,7 +430,9 @@ const CandlesTick: React.FunctionComponent<CandlesTickProps> = props => {
       }
     }
     if (chartConfig.series.length > 1) {
-      const series = chartConfig.series.map(series => getSeriesByOptionType(series, hasData));
+      const series = chartConfig.series.map((series) =>
+        getSeriesByOptionType(series, hasData)
+      );
       const min = Math.min(series.length, chartData.dataset?.[0]?.length);
       const legendData: { name: string; icon?: string }[] = [];
       for (let i = 0; i < min; i++) {
@@ -386,7 +444,10 @@ const CandlesTick: React.FunctionComponent<CandlesTickProps> = props => {
         }
         if (type == OptionType.line) {
           legendData.push({
-            name: chartData.dataset[0][chartConfig.series[i].encode.y[0]].toString() ?? "",
+            name:
+              chartData.dataset[0][
+                chartConfig.series[i].encode.y[0]
+              ].toString() ?? "",
             icon: wave,
           });
         }
@@ -405,7 +466,9 @@ const CandlesTick: React.FunctionComponent<CandlesTickProps> = props => {
 
     if (chartConfig) {
       const type = getOptionType(chartConfig.series[0]);
-      const data = noData ? { source: getDataSetSource(type) } : { source: chartData.dataset };
+      const data = noData
+        ? { source: getDataSetSource(type) }
+        : { source: chartData.dataset };
       const t: string = noData || lock ? "grey" : theme ?? "rime";
       const series = initSeries(chartConfig, noData, chartData);
       const xAxes = initXAxes(chartConfig, noData);
@@ -421,7 +484,7 @@ const CandlesTick: React.FunctionComponent<CandlesTickProps> = props => {
 
       handleBottomLayout(xAxes, legend, dataZoom);
 
-      setChartProps(prev => {
+      setChartProps((prev) => {
         if (
           isEqual(prev, {
             theme: t,
@@ -464,8 +527,15 @@ const CandlesTick: React.FunctionComponent<CandlesTickProps> = props => {
   }, [chartData, lock]);
 
   const chart = useMemo(() => {
-    console.log("333333333333333", chartProps);
-    return chartProps && <Chart {...chartProps} className={props.className} handleOption={handleOption} />;
+    return (
+      chartProps && (
+        <Chart
+          {...chartProps}
+          className={props.className}
+          handleOption={handleOption}
+        />
+      )
+    );
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [chartProps]);
 
@@ -476,7 +546,10 @@ const CandlesTick: React.FunctionComponent<CandlesTickProps> = props => {
           return (
             <Typography
               key={index}
-              className={clsx({ [classes.rightChartTitle]: index === 1, [classes.leftChartTitle]: index === 0 })}
+              className={clsx({
+                [classes.rightChartTitle]: index === 1,
+                [classes.leftChartTitle]: index === 0,
+              })}
             >
               {yAxisName}
             </Typography>

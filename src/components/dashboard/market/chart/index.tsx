@@ -9,13 +9,18 @@ interface ChartsProps {
   data: ChartsModel[];
 }
 
-const Chart: React.FunctionComponent<ChartsProps> = props => {
+const Chart: React.FunctionComponent<ChartsProps> = (props) => {
   const { data } = props;
   const [charts, setCharts] = useState<(string | number)[][]>([]);
 
   useEffect(() => {
     if (data.length > 0) {
-      const newData = _.reverse(data).map(item => [item.date, item.investment, item.exit, item.IPO]);
+      const newData = _.reverse(data).map((item) => [
+        item.date,
+        item.investment,
+        item.exit,
+        item.IPO,
+      ]);
       setCharts(newData);
     }
   }, [data]);
@@ -31,14 +36,18 @@ const Chart: React.FunctionComponent<ChartsProps> = props => {
         option.dataset = {
           source: arr,
         };
-      } catch (error) {
-        console.log(error);
-      }
+      } catch (error) {}
     }
     return option;
   }
 
-  return <BasicChart {...props} option={chartDataHandler?.(charts)} theme="dashboard" />;
+  return (
+    <BasicChart
+      {...props}
+      option={chartDataHandler?.(charts)}
+      theme="dashboard"
+    />
+  );
 };
 
 export default Chart;
