@@ -1,10 +1,16 @@
-import React, { PureComponent } from "react";
+import React from "react";
 import { init, dispose, Chart, KLineData } from "klinecharts";
-import generatedKLineDataList from "../utils/generatedKLineDataList";
-import Layout from "../Layout";
-import { useState } from "react";
 import { useEffect } from "react";
-import Kline from "..";
+import { Box, createStyles, makeStyles } from "@material-ui/core";
+import { useState } from "react";
+import { useClient } from "urql";
+import {
+  ChartDocument,
+  ChartQuery,
+  ChartQueryVariables,
+  EntityType,
+} from "../../../generated/graphql";
+import { KLineChartDataModel } from "./chartData";
 
 function getTooltipOptions() {
   return {
@@ -115,7 +121,7 @@ function getTooltipOptions() {
       // x轴分割文字
       tickText: {
         show: true,
-        color: "#D9D9D9",
+        color: "#888888",
         family: "Helvetica Neue",
         weight: "normal",
         size: 12,
@@ -148,7 +154,7 @@ function getTooltipOptions() {
       // x轴分割文字
       tickText: {
         show: true,
-        color: "#D9D9D9",
+        color: "black",
         family: "Helvetica Neue",
         weight: "normal",
         size: 12,
@@ -199,47 +205,165 @@ function getTooltipOptions() {
   };
 }
 
-interface TooltipKLineChartProps extends PureComponent {}
+const useStyles = makeStyles(() =>
+  createStyles({
+    root: {
+      display: "flex",
+      flexDirection: "column",
+      borderRadius: 2,
+      boxShadow: "0 2px 4px rgba(0, 0, 0, .3)",
+      backgroundColor: "#1f2126",
+      margin: "0 20px",
+      padding: "16px 6px 16px 16px",
+      border: "1px solid red",
+    },
+    title: {
+      margin: 0,
+      color: "#E6E8EA",
+      paddingBottom: 10,
+    },
+    chart: {
+      // width: "100%",
+      // minHeight: 200,
+    },
+    app: {
+      display: "flex",
+      flexDirection: "row",
+      justifyContent: "center",
+      flexWrap: "wrap",
+      padding: 15,
+      border: "1px solid red",
+      "& .k-line-chart-container": {
+        display: "flex",
+        flexDirection: "column",
+        margin: 15,
+        borderRadius: 2,
+        boxShadow: "0 2px 4px rgba(0, 0, 0, .3)",
+        backgroundColor: "#1f2126",
+        width: "100%",
+        padding: "16px 6px 16px 16px",
+        "& .k-line-chart-title": {
+          margin: 0,
+          color: "#E6E8EA",
+          paddingBottom: 10,
+        },
+        "& .k-line-chart": {
+          display: "flex",
+          flex: 1,
+          minHeight: 200,
+        },
+        "& .k-line-chart-menu-container": {
+          display: "flex",
+          flexDirection: "row",
+          alignItems: "center",
+          marginTop: 10,
+          fontSize: 12,
+          color: "#929AA5",
+          "& button": {
+            cursor: "pointer",
+            backgroundColor: "#2196F3",
+            borderRadius: 2,
+            marginRight: 8,
+            height: 24,
+            lineHeight: " 26px",
+            padding: "0 6px",
+            fontSize: 12,
+            color: "#fff",
+            border: "none",
+            outline: "none",
+          },
+        },
+      },
+    },
+  })
+);
 
-const TooltipKLineChart: React.FunctionComponent = (props) => {
+interface TooltipKLineChartProps {
+  title: string;
+}
+
+const TooltipKLineChart: React.FunctionComponent<TooltipKLineChartProps> = (
+  props
+) => {
+  const classes = useStyles();
+  const { title } = props;
+  const [kLineChart, setKLineChart] = useState<Chart | null>();
+  const client = useClient();
+
+  function query(endTimestamp: number) {
+    return client
+      .query<ChartQuery, ChartQueryVariables>(ChartDocument, {
+        chartID: "secondary_market.k_line_a_share",
+        entityID: "1056422353",
+        entityType: EntityType.Organization,
+        filters: {
+          dateRangeSelectorFilterInput: [
+            {
+              filterID:
+                "secondary_market.filter_listing_info_k_line_time_range",
+              startTimestamp: endTimestamp - 100 * 24 * 60 * 60,
+              endTimestamp: endTimestamp,
+            },
+          ],
+        },
+      })
+      .toPromise();
+  }
+
+  async function initKLine(chart: Chart) {
+    chart.createTechnicalIndicator("MA", false, { id: "candle_pane" });
+    // chart.createTechnicalIndicator("KDJ", false, { height: 80 });
+    // chart.createTechnicalIndicator("VOL", false);
+    chart.setStyleOptions(getTooltipOptions());
+
+    //设置单根蜡烛柱的宽度
+    chart.setDataSpace(12);
+    chart.setOffsetRightSpace(10);
+    const res = await query(Math.round(Date.now() / 1000));
+    const data = KLineChartDataModel.fromJSON(
+      JSON.parse(res.data?.chart?.data as string)
+    ).dataList;
+
+    chart.applyNewData(data, true);
+    chart.loadMore((timestamp) => {
+      setTimeout(async () => {
+        const res = await query(Math.round(timestamp / 1000));
+        const kLineData = KLineChartDataModel.fromJSON(
+          JSON.parse(res.data?.chart?.data as string)
+        ).dataList;
+        chart!.applyMoreData(kLineData, true);
+      }, 100);
+    });
+  }
+
   useEffect(() => {
     let kLineChart: Chart | null = init("tooltip-k-line");
-    if (kLineChart) {
-      kLineChart.createTechnicalIndicator("MA", false, { id: "candle_pane" });
-      // kLineChart.createTechnicalIndicator("KDJ", false, { height: 80 });
-      kLineChart.createTechnicalIndicator("VOL", false);
-      kLineChart.setStyleOptions(getTooltipOptions());
-
-      //设置单根蜡烛柱的宽度
-      kLineChart.setDataSpace(12);
-      kLineChart.setOffsetRightSpace(10);
-      kLineChart.applyNewData(
-        generatedKLineDataList(Date.now(), 300, 100),
-        true
-      );
-      kLineChart.loadMore((timestamp) => {
-        setTimeout(() => {
-          const firstData = kLineChart!.getDataList()[0];
-          kLineChart!.applyMoreData(
-            generatedKLineDataList(timestamp, firstData.close, 100),
-            true
-          );
-        }, 100);
-      });
-    }
+    if (!kLineChart) return;
+    initKLine(kLineChart);
+    setKLineChart(kLineChart);
     return () => {
       dispose("tooltip-k-line");
     };
   }, []);
 
+  useEffect(() => {
+    if (!kLineChart) return;
+    window.addEventListener("resize", () => kLineChart.resize());
+    return (): void => {
+      window.removeEventListener("resize", () => kLineChart.resize());
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [kLineChart]);
+
   return (
-    <Layout title="分页加载数据">
+    <Box className={classes.root}>
+      <Box className={classes.title}>{title}</Box>
       <div
         id="tooltip-k-line"
-        className="k-line-chart"
+        className={classes.chart}
         style={{ minHeight: 500 }}
       />
-    </Layout>
+    </Box>
   );
 };
 
