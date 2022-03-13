@@ -3,6 +3,7 @@ import type { NextPage } from "next";
 import React from "react";
 import Head from "next/head";
 import Tab from "../src/components/tab";
+import Kline from "../src/components/kline";
 
 const Dashboard: NextPage = () => {
   return (
@@ -10,7 +11,8 @@ const Dashboard: NextPage = () => {
       <Head>
         <title>React | Next</title>
       </Head>
-      <Tab />
+      {/* <Tab /> */}
+      <Kline />
     </Box>
   );
 };
